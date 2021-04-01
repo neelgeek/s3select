@@ -1757,7 +1757,13 @@ public:
             {
               i->set_last_call();
               i->set_skip_non_aggregate(false);//projection column is set to be runnable
-              result.append( i->eval().to_string() );
+              std::string proj_result;
+              proj_result = i->eval().to_string() ;
+              if((result.length()+proj_result.length())>=80)
+              {
+                result.append("\n");
+              }
+              result.append(proj_result);
               result.append(",");
             }
 
@@ -1808,8 +1814,14 @@ public:
 
       for (auto& i : m_projections)
       {
-        result.append( i->eval().to_string() );
-        result.append(",");
+              std::string proj_result;
+              proj_result = i->eval().to_string() ;
+              if((result.length()+proj_result.length())>=80)
+              {
+                result.append("\n");
+              }
+              result.append(proj_result);
+              result.append(",");
       }
       result.append("\n");
     }
@@ -2105,7 +2117,13 @@ public:
             for (auto i : m_projections)
             {
               i->set_last_call();
-              result.append(i->eval().to_string());
+              std::string proj_result;
+              proj_result = i->eval().to_string() ;
+              if((result.length()+proj_result.length())>=80)
+              {
+                result.append("\n");
+              }
+              result.append(proj_result);
               result.append(",");
             }
           }
@@ -2182,8 +2200,14 @@ public:
 
       for (auto i : m_projections)
       {
-        result.append(i->eval().to_string());
-        result.append(",");
+              std::string proj_result;
+              proj_result = i->eval().to_string() ;
+              if((result.length()+proj_result.length())>=80)
+              {
+                result.append("\n");
+              }
+              result.append(proj_result);
+              result.append(",");
       }
       result.append("\n");
 
