@@ -499,7 +499,7 @@ public:
     {
       if (type == value_En_t::DECIMAL)
       {
-        m_to_string.assign("[")
+        m_to_string.assign("[");
         m_to_string.append( boost::lexical_cast<std::string>(__val.num) );
         m_to_string.append("]");
       }
@@ -516,7 +516,7 @@ public:
       }
       else if(type == value_En_t::FLOAT)
       {
-        m_to_string.assign("[")
+        m_to_string.append("[");
         m_to_string.append(boost::lexical_cast<std::string>(__val.dbl));
         m_to_string.append("]");
       }
@@ -531,9 +531,9 @@ public:
     }
     else
     {
-      m_to_string.assign("[")
+      m_to_string.assign("{");
       m_to_string.append( __val.str );
-      m_to_string.append("]");
+      m_to_string.append("}");
     }
 
     return m_to_string; 
