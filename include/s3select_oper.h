@@ -499,22 +499,26 @@ public:
     {
       if (type == value_En_t::DECIMAL)
       {
-        m_to_string.assign( boost::lexical_cast<std::string>(__val.num) );
+        m_to_string.assign("[")
+        m_to_string.append( boost::lexical_cast<std::string>(__val.num) );
+        m_to_string.append("]");
       }
       if (type == value_En_t::BOOL)
       {
         if(__val.num == 0)
         {
-          m_to_string.assign("false");
+          m_to_string.assign("(false)");
         }
         else
         {
-          m_to_string.assign("true");
+          m_to_string.assign("(true)");
         }
       }
       else if(type == value_En_t::FLOAT)
       {
-        m_to_string = boost::lexical_cast<std::string>(__val.dbl);
+        m_to_string.assign("[")
+        m_to_string.append(boost::lexical_cast<std::string>(__val.dbl));
+        m_to_string.append("]");
       }
       else if (type == value_En_t::TIMESTAMP)
       {
@@ -527,7 +531,9 @@ public:
     }
     else
     {
-      m_to_string.assign( __val.str );
+      m_to_string.assign("[")
+      m_to_string.append( __val.str );
+      m_to_string.append("]");
     }
 
     return m_to_string; 
