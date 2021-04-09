@@ -16,6 +16,7 @@ RUN apt-get install -y -V ./apache-arrow-archive-keyring-latest-$(lsb_release --
 RUN apt-get update
 RUN apt-get install -y -V libarrow-dev
 RUN apt-get install -y -V libparquet-dev
+RUN apt-get update
 RUN apt-get install -y -V vim
 RUN apt-get install -y -V gdb
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends libboost-all-dev  libgtest-dev
