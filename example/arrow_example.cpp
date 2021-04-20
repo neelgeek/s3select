@@ -15,6 +15,8 @@
 #include <arrow/status.h>
 #include <arrow/table.h>
 #include <arrow/ipc/api.h>
+#include <arrow/ipc/options.h>
+#include <arrow/filesystem/api.h>
 
 using arrow::Int64Builder;
 using arrow::StringBuilder;
@@ -52,9 +54,18 @@ int main(int argc, char** argv)
 
     std::cout<<(data_table.get())->ToString();
 
-    auto output_file = arrow::io::FileOutputStream::Open(arrow_filename);
+    auto fs = new arrow::fs::LocalFileSystem(arrow::fs::LocalFileSystemOptions::Defaults());
 
-    auto batch_writer= arrow::ipc::MakeFileWriter(output_file,data_table->schema());
+    auto output_file_open_result = fs->OpenOutputStream(arrow_filename);
+
+//    auto output_file = nullptr;
+//    if(output_file_open_result.ok()){
+      auto  output_file = output_file_open_result.ValueOrDie();
+//    }
+
+    auto batch_writer_result= arrow::ipc::MakeFileWriter(output_file,data_table->schema());
+
+    auto batch_writer = batch_writer_result.ValueOrDie();
 
     batch_writer->WriteTable(*data_table);
 
