@@ -34,7 +34,8 @@ int run_query_on_parquet_file(const char* input_query, const char* input_file)
 
   parquet_object parquet_processor(input_file,&s3select_syntax);
 
-  std::string result;
+//  std::string result;
+  std::shared_ptr<arrow::Table> result;
 
   do
   {
@@ -53,7 +54,7 @@ int run_query_on_parquet_file(const char* input_query, const char* input_file)
       }
     }
 
-    std::cout << result << std::endl;
+    std::cout << (result.get())->ToString() << std::endl;
 
     if (status < 0)
       break;

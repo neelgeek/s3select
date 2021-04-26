@@ -10,6 +10,7 @@
 #include "s3select_oper.h"
 #include "s3select_functions.h"
 #include "s3select_csv_parser.h"
+#include "output_handlers.h"
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <functional>
@@ -1758,11 +1759,11 @@ public:
               i->set_last_call();
               i->set_skip_non_aggregate(false);//projection column is set to be runnable
               std::string proj_result;
-              proj_result = i->eval().to_string() ;
-              if((result.length()+proj_result.length())>=80)
-              {
-                result.append("\n");
-              }
+              proj_result = i->eval().to_string();
+//              if((result.length()+proj_result.length())>=80)
+//              {
+//                result.append("\n");
+//              }
               result.append(proj_result);
               result.append(",");
             }
@@ -1816,10 +1817,10 @@ public:
       {
               std::string proj_result;
               proj_result = i->eval().to_string() ;
-              if((result.length()+proj_result.length())>=80)
-              {
-                result.append("\n");
-              }
+//              if((result.length()+proj_result.length())>=80)
+//              {
+//                result.append("\n");
+//              }
               result.append(proj_result);
               result.append(",");
       }
@@ -2000,7 +2001,7 @@ private:
   parquet_file_parser::column_pos_t m_projections_columns;
   std::vector<parquet_file_parser::parquet_value_t> m_predicate_values;
   std::vector<parquet_file_parser::parquet_value_t> m_projections_values;
-
+  arrow_output_handler* parquetOutputHandler;
 public:
   parquet_object(std::string parquet_file_name, s3select *s3_query) : base_s3object(s3_query->get_scratch_area()),object_reader(parquet_file_name)
   {
@@ -2016,12 +2017,17 @@ public:
 
     if(m_s3_select->get_filter())
         m_s3_select->get_filter()->extract_columns(m_where_clause_columns,object_reader.get_num_of_columns());
+
+
+      this->parquetOutputHandler = new arrow_output_handler("file.h", m_projections.size());
+      std::cout<<"Projections size: "<<m_projections.size()<<"\n";
   }
 
-  int run_s3select_on_object(std::string &result)
+  int run_s3select_on_object(auto &result)
   {
 
-    result.clear();
+//    result.clear();
+    this->parquetOutputHandler->setOutputTable(result);
     do
     {
 
@@ -2096,16 +2102,15 @@ public:
     return object_reader.end_of_stream();
   }
 
-  int getMatchRow(std::string &result) //TODO virtual ? getResult
+  int getMatchRow(auto &result) //TODO virtual ? getResult
   {
 
     // get all column-references from where-clause
     // call parquet-reader(predicate-column-positions ,&row-values)
     // update scrach area with row-values
     // run where (if exist) in-case its true --> parquet-reader(projections-column-positions ,&row-values)
-
+    std::vector<value> resultRow;
     bool next_rownum_status = true;
-
     if (m_aggr_flow == true)
     {
       do
@@ -2116,15 +2121,15 @@ public:
           {
             for (auto i : m_projections)
             {
-              i->set_last_call();
-              std::string proj_result;
-              proj_result = i->eval().to_string() ;
-              if((result.length()+proj_result.length())>=80)
-              {
-                result.append("\n");
-              }
-              result.append(proj_result);
-              result.append(",");
+//              i->set_last_call();
+//              std::string proj_result;
+//              proj_result = i->eval().to_string() ;
+//              if((result.length()+proj_result.length())>=80)
+//              {
+//                result.append("\n");
+//              }
+//              result.append(proj_result);
+//              result.append(",");
             }
           }
 
@@ -2197,20 +2202,35 @@ public:
 
       object_reader.get_column_values_by_positions(m_projections_columns, m_projections_values);
       m_sa->update(m_projections_values, m_projections_columns);
-
+      std::string proj_result;
+//      std::cout<<"\n";
       for (auto i : m_projections)
       {
-              std::string proj_result;
-              proj_result = i->eval().to_string() ;
-              if((result.length()+proj_result.length())>=80)
-              {
-                result.append("\n");
-              }
-              result.append(proj_result);
-              result.append(",");
-      }
-      result.append("\n");
 
+
+          auto proj_result = i->eval();
+          resultRow.push_back(proj_result);
+//          if(proj_result.is_number()){
+//              std::cout<<"Number ";
+//          }
+//          else if(proj_result.is_string()){
+//              std::cout<<"String ";
+//          }
+//          else if(proj_result.is_nan()){
+//              std::cout<<"NaN ";
+//          }
+//          std::string proj_col;
+//          proj_col = i->eval().to_string() ;
+//              if((proj_result.length()+proj_col.length())>=80)
+//              {
+//                  proj_result.append("\n");
+//              }
+//              proj_result.append(proj_col);
+//              proj_result.append(",");
+      }
+//      result.append(proj_result);
+//      result.append("\n");
+        parquetOutputHandler->appendResultRow(resultRow);
       object_reader.increase_rownum();
 
       if (is_end_of_stream())
