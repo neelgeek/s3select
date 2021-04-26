@@ -47,22 +47,13 @@ public:
 
    void appendResultRow(std::vector<s3selectEngine::value> result){
        for (int i = 0; i < result.size(); ++i) {
-           arrow::Int64Builder* int64Builder1 = new arrow::Int64Builder();
            s3selectEngine::value v = result[i];
-//           if(builderArray.size()<=i){
                if(v.is_number()){
                    if(builderArray.size()<=i) {
-//                       arrow::Int64Builder i64builder;
-//                       std::cout<<"Length "<<i64builder.length();
-//                        int64Builder1 =  arrow::Int64Builder();
                        builderArray.push_back(new arrow::Int64Builder());
-
                    }
-                       arrow::Int64Builder *int64Builder = static_cast<arrow::Int64Builder*>(builderArray[i]);
-//                        int size = int64Builder1->length();
-                   int64Builder1->Reserve(1);
-                   int64Builder1->UnsafeAppend(1);
-//                       int64Builder1->Append(1);
+                   arrow::Int64Builder *int64Builder = static_cast<arrow::Int64Builder*>(builderArray[i]);
+                   int64Builder->Append(1);
                 }
               else if(v.is_string()){
                    if(builderArray.size()<=i) {
@@ -80,9 +71,6 @@ public:
               }
               std::cout<<builderArray[i]->length()<<" ";
            }
-
-
-//       }
        std::cout<<builderArray.size()<<"\n";
 
     }
