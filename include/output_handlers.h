@@ -23,6 +23,10 @@ public:
         std::cout<<" column_count "<<column_count<<std::endl;
     }
 
+    ~base_output_handler(){
+        // TODO: Free the members of builderArray
+
+    }
 };
 
 
@@ -43,19 +47,22 @@ public:
 
    void appendResultRow(std::vector<s3selectEngine::value> result){
        for (int i = 0; i < result.size(); ++i) {
+           arrow::Int64Builder* int64Builder1 = new arrow::Int64Builder();
            s3selectEngine::value v = result[i];
-           if(builderArray.size()<=i){
+//           if(builderArray.size()<=i){
                if(v.is_number()){
                    if(builderArray.size()<=i) {
-                       arrow::Int64Builder i64builder;
-                       std::cout<<"Length "<<i64builder.length();
-                       builderArray.push_back(&i64builder);
+//                       arrow::Int64Builder i64builder;
+//                       std::cout<<"Length "<<i64builder.length();
+//                        int64Builder1 =  arrow::Int64Builder();
+                       builderArray.push_back(new arrow::Int64Builder());
 
-                   }else {
-                       arrow::Int64Builder *int64Builder = (arrow::Int64Builder *) &builderArray[i];
-//                   std::cout<<"Length "<<int64Builder->length();
-                       int64Builder->Append(v.i64());
                    }
+                       arrow::Int64Builder *int64Builder = static_cast<arrow::Int64Builder*>(builderArray[i]);
+//                        int size = int64Builder1->length();
+                   int64Builder1->Reserve(1);
+                   int64Builder1->UnsafeAppend(1);
+//                       int64Builder1->Append(1);
                 }
               else if(v.is_string()){
                    if(builderArray.size()<=i) {
@@ -71,10 +78,11 @@ public:
                    arrow::BooleanBuilder *booleanBuilder = (arrow::BooleanBuilder *) &builderArray[i];
                    booleanBuilder->Append(v.is_true());
               }
+              std::cout<<builderArray[i]->length()<<" ";
            }
-                std::cout<<builderArray[i]->length()<<" ";
 
-       }
+
+//       }
        std::cout<<builderArray.size()<<"\n";
 
     }
