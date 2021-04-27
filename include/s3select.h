@@ -14,6 +14,23 @@
 #include <boost/bind.hpp>
 #include <functional>
 
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <arrow/result.h>
+#include <arrow/status.h>
+#include <arrow/table.h>
+
+using arrow::Int64Builder;
+using arrow::StringBuilder;
+using arrow::schema;
+using arrow::Table;
+using arrow::Status;
+using arrow::ipc::RecordBatchWriter;
+
 
 #define _DEBUG_TERM {string  token(a,b);std::cout << __FUNCTION__ << token << std::endl;}
 
@@ -1910,6 +1927,71 @@ public:
 
     m_extract_csv_header_info = true;
 
+    return 0;
+  }
+
+public:
+  int run_s3select_on_stream(std::shared_ptr<arrow::Table>& arrowtable, const char* csv_stream, size_t stream_length, size_t obj_size)
+  {
+    std::string s3select_result;
+    int status = run_s3select_on_stream(s3select_result, csv_stream, stream_length, obj_size);
+    std::stringstream s3select_stream(s3select_result);
+    std::string result_row;
+    std::vector<arrow::StringBuilder*> strbuilders;
+    bool firstRow = true;
+    std::vector<std::shared_ptr<arrow::Array>> finalearrays;
+
+    if (!s3select_result.empty())
+    {
+        while(std::getline(s3select_stream,result_row,'\n'))
+        {
+     // std::cout <<"Processing CSV row by row"<<std::endl;
+            std::string result_data;
+            result_row = result_row.substr(1, result_row.size() - 3);
+            std::stringstream result_row_stream(result_row);
+            std::vector<std::string> row_values;
+            if(!result_row.empty())
+            {
+                while(std::getline(result_row_stream, result_data, ','))
+                {
+
+             // std::cout <<"Creating array for every row"<<std::endl;
+                    // 1 dog 2.2
+                    // 2 cat 3.0
+                    row_values.push_back(result_data);
+
+                }
+                if(firstRow)
+                {
+                    firstRow = false;
+                        for (int i = 0; i < row_values.size(); ++i)
+                    {
+        //  std::cout <<"Initialiazing builders"<<std::endl;
+                        strbuilders.push_back(new arrow::StringBuilder());
+                    }
+                }
+
+                for(int i = 0; i < row_values.size(); ++i)
+                {
+    //  std::cout <<"Filling builders"<<std::endl;
+                    strbuilders[i]->Append(row_values[i]);
+                }
+            }
+        }
+    }
+    for(int i = 0; i < strbuilders.size(); i++)
+    {
+        std::shared_ptr<arrow::Array> arr;
+        strbuilders[i]->Finish(&arr);
+        finalearrays.push_back(arr);
+    }
+   // std::cout <<"Creating schema and table"<<std::endl;
+    auto schema = arrow::schema(
+    {
+        arrow::field("c1", arrow::utf8()),
+        arrow::field("c2", arrow::utf8()),
+        arrow::field("c3", arrow::utf8())});
+    arrowtable = arrow::Table::Make(schema, finalearrays);
     return 0;
   }
 
