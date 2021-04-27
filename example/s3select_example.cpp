@@ -3,27 +3,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "arrow/io/api.h"
-#include "arrow/ipc/feather.h"
-
-#include <arrow/api.h>
-#include <fstream>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <arrow/result.h>
-#include <arrow/status.h>
-#include <arrow/table.h>
-#include <arrow/ipc/api.h>
-#include <arrow/ipc/options.h>
-#include <arrow/filesystem/api.h>
-
-using arrow::Int64Builder;
-using arrow::StringBuilder;
-using arrow::schema;
-using arrow::Table;
-using arrow::Status;
-using arrow::ipc::RecordBatchWriter;
 
 using namespace s3selectEngine;
 using namespace BOOST_SPIRIT_CLASSIC_NS;
@@ -177,7 +156,6 @@ int main(int argc, char** argv)
     //char * in = fgets(buff,sizeof(buff),fp);
     size_t input_sz = fread(buff, 1, BUFF_SIZE, fp);
     char* in=buff;
-    std::shared_ptr<arrow::Table> arrowtable;
     //input_sz = strlen(buff);
     //size_t input_sz = in == 0 ? 0 : strlen(in);
 
@@ -192,28 +170,8 @@ int main(int argc, char** argv)
     }
     else
     {
-     //  status = s3_csv_object.run_s3select_on_stream(s3select_result, in, input_sz, statbuf.st_size);
-         status = s3_csv_object.run_s3select_on_stream(arrowtable, in, input_sz, statbuf.st_size);
-         std::cout <<"Received Arrow table. Creating the Arrow file at testthearrow.arrow."<<std::endl;
-         std::string arrow_filename = "testthearrow.arrow";
-         auto fs = new arrow::fs::LocalFileSystem(arrow::fs::LocalFileSystemOptions::Defaults());
-
-         auto output_file_open_result = fs->OpenOutputStream(arrow_filename);
-
-         auto  output_file = output_file_open_result.ValueOrDie();
-
-         std::cout <<"Creating file in progress.."<<std::endl;
-     
-         auto batch_writer_result= arrow::ipc::MakeFileWriter(output_file,arrowtable->schema());
-
-         auto batch_writer = batch_writer_result.ValueOrDie();
-
-        
-        batch_writer->WriteTable(*arrowtable);
-        std::cout <<"File created."<<std::endl;
-        batch_writer->Close();    
+      status = s3_csv_object.run_s3select_on_stream(s3select_result, in, input_sz, statbuf.st_size);
     }
-
     if(status<0)
     {
       std::cout << "failure on execution " << std::endl << s3_csv_object.get_error_description() <<  std::endl;
