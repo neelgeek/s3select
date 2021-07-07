@@ -10,3 +10,6 @@ add_custom_command(OUTPUT expr_genrator.py COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR
 
 add_custom_target(expr_generator ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/expr_genrator.py)
 
+add_executable(arrow_example arrow_example.cpp)
+target_include_directories(arrow_example PUBLIC ../include)
+target_link_libraries(arrow_example boost_date_time boost_system boost_thread parquet arrow_shared)
